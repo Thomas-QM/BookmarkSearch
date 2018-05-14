@@ -30,7 +30,6 @@ let GetText url = async {
         try
             let! res = fetch url [Mode RequestMode.Cors] |> Async.AwaitPromise
             let! restxt = res.text () |> Async.AwaitPromise
-            console.log(restxt)
             return ok restxt
         with
             | error -> return fail error
