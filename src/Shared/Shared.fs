@@ -29,11 +29,7 @@ type HTMLDataElements = {ToSearch:string; Accuracy:string; MaxResults:string; Hi
 
 type [<Pojo>] BookmarkTree = {url:string option;children:BookmarkTree array option;}
 type [<Pojo>] HistoryItem = {id:string; url:string option}
-<<<<<<< HEAD
-type WebExtBookmarks = {getTree:(BookmarkTree array -> unit) -> unit}
-=======
 type WebExtBookmarks = {search:obj -> JS.Promise<BookmarkTree array>}
->>>>>>> master
 type WebExtHistory = {search:obj -> JS.Promise<HistoryItem array>}
 type BGPage = {state:State}
 type WebExtRuntime = {getBackgroundPage: unit -> JS.Promise<BGPage>; sendMessage:obj -> unit; onMessage:JSEvent}
