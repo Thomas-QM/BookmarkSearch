@@ -13,7 +13,9 @@
         "bookmarks",
         "history",
         "<all_urls>",
-        "webRequest"
+        "webRequest",
+        "http://*/",
+        "https://*/"
     ],
 
     "browser_action": {

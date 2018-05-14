@@ -5,18 +5,19 @@ open Fable.Core.JsInterop
 open Fable.Import.Browser
 open Fable.Import
 
+open Shared
+let browserp:WebExtBrowser = importDefault "chrome-promise"
+
 open Fable.PowerPack
 open Fable.PowerPack.Fetch
 open Fable.PowerPack.Date
 
-open Shared
 
 open System
 open System.Text.RegularExpressions
 
 open Chessie.ErrorHandling
 
-let browserp:WebExtBrowser = importDefault "chrome-promise"
 let defaultstate = Idle
 let mutable state = defaultstate
 let SetState x =
@@ -27,7 +28,7 @@ type [<Pojo>] SearchElem = {Url:ElemUrl; UrlStr:string; HTML:string option; Text
 
 let GetText url = async {
         try
-            let! res = fetch url [Mode RequestMode.Nocors] |> Async.AwaitPromise
+            let! res = fetch url [Mode RequestMode.Cors] |> Async.AwaitPromise
             let! restxt = res.text () |> Async.AwaitPromise
             console.log(restxt)
             return ok restxt
@@ -68,14 +69,6 @@ let ValidateNumber x =
     try
         x |> float |> ok
     with | error -> fail error.Message
-
-type CallbackBuilder() =
-    member this.Bind(x, f) =
-        x(f)
-    member this.Delay(f) = f()
-    member this.Return(x) = x
-
-let callback = CallbackBuilder()
 
 let GetBookmarks () = async {
     let! tree = browserp.bookmarks.search (createObj []) |> Async.AwaitPromise
