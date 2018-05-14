@@ -22,7 +22,7 @@ let SetState x =
     state <- x
     browser.runtime.sendMessage (box (x |> StateUpdate))
 
-type [<Pojo>] SearchElem = {Url:ElemUrl; UrlStr:string; HTML:string option; Text:string option;}
+type [<Pojo>] SearchElem = {Url:ElemUrl; UrlStr:string; Text:string option;}
 
 let GetText url = async {
         try
@@ -98,7 +98,10 @@ let SearchRes {ToSearch=tosearch;Accuracy=accuracy;MaxResults=maxres;HistoryDays
     let dohtml = [0;2] |> List.exists (Equals searchmethod)
     let dourl = [0;1] |> List.exists (Equals searchmethod)
 
-    let keys = Array.concat [(if dohtml then [|"Text";"HTML"|] else [||]); (if dourl then [|"UrlStr"|] else [||])]
+    let addiftrue y = function
+        | true -> [|y|] | _ -> [||]
+
+    let keys = Array.concat [dohtml |> addiftrue "Text"; dourl |> addiftrue "UrlStr"]
 
     let! bookmarks = async {
         if dobookmarks then
@@ -129,9 +132,9 @@ let SearchRes {ToSearch=tosearch;Accuracy=accuracy;MaxResults=maxres;HistoryDays
                     let html = response |> Array.choose (function | Pass x -> Some x | _ -> None) |> Array.map format
                     let text = html |> Array.map HTMLToText
 
-                    return Array.zip3 urls html text |> Array.map (fun (url, html, txt) -> {Url=url;UrlStr=EUrlStr url;HTML=Some html; Text=Some txt})
+                    return Array.zip urls text |> Array.map (fun (url, txt) -> {Url=url;UrlStr=EUrlStr url;Text=Some txt})
                 }
-            | false -> asyncTrial {return urls |> Array.map (fun x -> {Url=x;UrlStr=EUrlStr x;HTML=None;Text=None})}
+            | false -> asyncTrial {return urls |> Array.map (fun x -> {Url=x;UrlStr=EUrlStr x;Text=None})}
 
     let! res = SearchElemArray elems keys accuracy maxres tosearch
     return res
