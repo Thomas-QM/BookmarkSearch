@@ -66,8 +66,16 @@ let ValidateNumber x =
         x |> float |> ok
     with | error -> fail error.Message
 
-let GetBookmarks () = async {
-    let! tree = browser.bookmarks.getTree () |> Async.AwaitPromise
+type CallbackBuilder() =
+    member this.Bind(x, f) =
+        x(f)
+    member this.Delay(f) = f()
+    member this.Return(x) = x
+
+let callback = CallbackBuilder()
+
+let GetBookmarks () =  callback {
+    let! tree = browser.bookmarks.getTree
     let rec mapper = function
         | {BookmarkTree.url=Some x;} -> [|x|]
         | {children=Some x} -> x |>  Array.map mapper |> (function | [||] -> [||] | x -> Array.reduce Array.append x)

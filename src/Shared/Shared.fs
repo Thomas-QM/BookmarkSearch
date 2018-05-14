@@ -25,7 +25,7 @@ type HTMLDataElements = {ToSearch:string; Accuracy:string; HistoryDays:string; H
 
 type [<Pojo>] BookmarkTree = {url:string option;children:BookmarkTree array option;}
 type [<Pojo>] HistoryItem = {id:string; url:string option}
-type WebExtBookmarks = {getTree:unit -> JS.Promise<BookmarkTree array>}
+type WebExtBookmarks = {getTree:(BookmarkTree array -> unit) -> unit}
 type WebExtHistory = {search:obj -> JS.Promise<HistoryItem array>}
 type BGPage = {state:State}
 type WebExtRuntime = {getBackgroundPage: unit -> JS.Promise<BGPage>; sendMessage:obj -> unit; onMessage:JSEvent}
@@ -36,5 +36,5 @@ type Message =
     | GetState
     | StartSearch of HTMLDataElements
 
-[<Emit("browser")>]
+[<Emit("chrome")>]
 let browser:WebExtBrowser = jsNative

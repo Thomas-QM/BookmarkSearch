@@ -24,8 +24,6 @@ let getvalue (x:obj) =
 let getselectvalue (x:obj) =
     (x :?> HTMLSelectElement).value |> int
 
-let bgpage = browser.runtime.getBackgroundPage () |> Async.AwaitPromise
-
 window.onload <- (fun x ->
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
 
