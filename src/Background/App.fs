@@ -51,9 +51,7 @@ let fsgoasync x y z :JS.Promise<FuzzyResult<_> array> = jsNative
 let SearchElemArray (arr:SearchElem array) keys threshold query =
     async {
         try
-            console.log "everything alright"
             let opts = (SearchOptions keys threshold)
-            console.log opts
             let! x = fsgoasync query arr opts |> Async.AwaitPromise
             console.log x
             return ok (x |> Array.map (fun {obj={Url=x}} -> x))
