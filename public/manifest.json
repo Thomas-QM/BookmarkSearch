@@ -1,0 +1,31 @@
+{
+
+    "manifest_version": 2,
+    "name": "BookmarkSearch",
+    "version": "0.1",
+
+    "description": "Search through things",
+    "icons": {
+        "48": "icons/history-search.png"
+    },
+
+    "permissions": [
+        "bookmarks",
+        "history",
+        "<all_urls>",
+        "webRequest"
+    ],
+
+    "browser_action": {
+        "default_icon": {
+            "32": "icons/history-search.png"
+        },
+        "default_title": "BookmarkSearch",
+        "default_popup": "index.html"
+    },
+
+    "background": {
+        "scripts": ["background.js"]
+    }
+
+}
