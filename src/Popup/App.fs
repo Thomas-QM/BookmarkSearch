@@ -26,7 +26,7 @@ let getselectvalue (x:obj) =
 
 let bgpage = browser.runtime.getBackgroundPage () |> Async.AwaitPromise
 
-window.onload <- (fun x ->
+window.onload <- (fun _ ->
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
 
     GetState |> box |> browser.runtime.sendMessage
