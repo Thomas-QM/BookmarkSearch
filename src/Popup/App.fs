@@ -24,7 +24,7 @@ let getvalue (x:obj) =
 let getselectvalue (x:obj) =
     (x :?> HTMLSelectElement).value |> int
 
-window.onload <- (fun x ->
+window.onload <- (fun _ ->
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
 
     GetState |> box |> browser.runtime.sendMessage
