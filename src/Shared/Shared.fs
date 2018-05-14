@@ -16,16 +16,20 @@ open Chessie.ErrorHandling
 
 type JSEvent = {addListener:Func<obj,unit> -> unit; removeListener:Func<obj,unit> -> unit; hasListener: Func<obj,unit> -> bool}
 
+type ElemUrl = History of string | Bookmark of string
+let EUrlStr = function | Bookmark x | History x -> x
+
 type State =
     | Idle
     | Searching
-    | Finished of Result<string array,string>
+    | Finished of Result<ElemUrl array,string>
 
-type HTMLDataElements = {ToSearch:string; Accuracy:string; HistoryDays:string; HistoryResults:string; HistoryBookmarks:int; SearchMethod:int;}
+
+type HTMLDataElements = {ToSearch:string; Accuracy:string; MaxResults:string; HistoryDays:string; HistoryResults:string; HistoryBookmarks:int; SearchMethod:int;}
 
 type [<Pojo>] BookmarkTree = {url:string option;children:BookmarkTree array option;}
 type [<Pojo>] HistoryItem = {id:string; url:string option}
-type WebExtBookmarks = {getTree:unit -> JS.Promise<BookmarkTree array>}
+type WebExtBookmarks = {search:obj -> JS.Promise<BookmarkTree array>}
 type WebExtHistory = {search:obj -> JS.Promise<HistoryItem array>}
 type BGPage = {state:State}
 type WebExtRuntime = {getBackgroundPage: unit -> JS.Promise<BGPage>; sendMessage:obj -> unit; onMessage:JSEvent}

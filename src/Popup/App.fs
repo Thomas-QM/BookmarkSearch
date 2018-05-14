@@ -34,12 +34,13 @@ window.onload <- (fun x ->
     searchbutton.onclick <- (fun _ ->
         let tosearch = document.querySelector "#tosearch" |> getvalue
         let accuracy = document.querySelector "#accuracy" |> getvalue
+        let maxres = document.querySelector "#maxres" |> getvalue
         let hd = document.querySelector "#historydays" |> getvalue
         let hr = document.querySelector "#historyresults" |> getvalue
         let hb = document.querySelector "#historybookmarks" |> getselectvalue
         let sm = document.querySelector "#searchmethod" |> getselectvalue
 
-        let d = {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=hd;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm}
+        let d = {ToSearch=tosearch;Accuracy=accuracy;MaxResults=maxres;HistoryDays=hd;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm}
         d |> StartSearch |> box |> browser.runtime.sendMessage)
 )
 
@@ -56,7 +57,10 @@ let HandleState x =
         | Searching ->
             SetStatus "Searching..."
         | Finished (Pass x) when Array.length x > 0 ->
-            SetStatus (x |> Array.map (fun x -> sprintf "<p><a href=\"%s\" >%s</a></p>" x x) |> Array.reduce (+))
+            SetStatus (x |> Array.map (fun x ->
+                            let pre = match x with | Bookmark _ -> "[Bookmark]" | History _ -> "[History]"
+                            let x2 = EUrlStr x
+                            sprintf "<p><a href=\"%s\" ><span class=\"urltype\" >%s</span>%s</a></p>" x2 pre x2) |> Array.reduce (+))
         | Finished (Pass x) ->
             SetStatus "No results found!"
         | Finished (Fail (x::_)) ->
