@@ -1,7 +1,5 @@
-# Fable Simple Template
-
-This template can be used to generate a simple web app with [Fable](http://fable.io/).
-You can find more templates by searching `Fable.Template` packages in [Nuget](https://www.nuget.org).
+## Build Instructions
+This is a fable app made with F#. Fable is a f# to js transpiler.
 
 ## Requirements
 
