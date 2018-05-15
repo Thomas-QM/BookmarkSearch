@@ -58,7 +58,7 @@ let HandleState x =
             SetStatus (x |> Array.map (fun x ->
                             let pre = match x with | Bookmark _ -> "[Bookmark]" | History _ -> "[History]"
                             let x2 = EUrlStr x
-                            sprintf "<p><a href=\"%s\" ><span class=\"urltype\" >%s</span>%s</a></p>" x2 pre x2) |> Array.reduce (+))
+                            sprintf "<p><a onclick=\"chrome.tabs.create({url:%s})\" ><span class=\"urltype\" >%s</span>%s</a></p>" x2 pre x2) |> Array.reduce (+))
         | Finished (Pass x) ->
             SetStatus "No results found!"
         | Finished (Fail (x::_)) ->
