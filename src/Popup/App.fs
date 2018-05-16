@@ -22,7 +22,7 @@ let getvalue (x:obj) =
     (x :?> HTMLInputElement).value
 
 let getselectvalue (x:obj) =
-    (x :?> HTMLSelectElement).value |> int
+    (x :?> HTMLSelectElement).value
 
 window.onload <- (fun _ ->
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
@@ -32,13 +32,13 @@ window.onload <- (fun _ ->
     searchbutton.onclick <- (fun _ ->
         let tosearch = document.querySelector "#tosearch" |> getvalue
         let accuracy = document.querySelector "#accuracy" |> getvalue
-        let maxres = document.querySelector "#maxres" |> getvalue
         let hd = document.querySelector "#historydays" |> getvalue
         let hr = document.querySelector "#historyresults" |> getvalue
-        let hb = document.querySelector "#historybookmarks" |> getselectvalue
-        let sm = document.querySelector "#searchmethod" |> getselectvalue
+        let hb = document.querySelector "#historybookmarks" |> getselectvalue |> int
+        let sm = document.querySelector "#searchmethod" |> getselectvalue |> int
+        let lang = document.querySelector "#language" |> getselectvalue
 
-        let d = {ToSearch=tosearch;Accuracy=accuracy;MaxResults=maxres;HistoryDays=hd;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm}
+        let d = {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=hd;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;Language=lang}
         d |> StartSearch |> box |> browser.runtime.sendMessage)
 )
 
@@ -55,10 +55,13 @@ let HandleState x =
         | Searching ->
             SetStatus "Searching..."
         | Finished (Pass x) when Array.length x > 0 ->
-            SetStatus (x |> Array.map (fun x ->
+            SetStatus (x |> Array.mapi (fun i x ->
                             let pre = match x with | Bookmark _ -> "[Bookmark]" | History _ -> "[History]"
                             let x2 = EUrlStr x
-                            sprintf "<p><a onclick=\"chrome.tabs.create({url:%s})\" ><span class=\"urltype\" >%s</span>%s</a></p>" x2 pre x2) |> Array.reduce (+))
+                            sprintf "<p id='a%i' ><a><span class=\"urltype\" >%s</span>%s</a></p>" i pre x2) |> Array.reduce (+))
+            x |> Array.iteri (fun i x -> let a:HTMLLinkElement = (!!document.querySelector (sprintf "#a%i" i))
+                                         a.onclick <-
+                                            (fun _ -> browser.tabs.create (createObj ["url" ==> EUrlStr x])))
         | Finished (Pass x) ->
             SetStatus "No results found!"
         | Finished (Fail (x::_)) ->
