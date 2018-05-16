@@ -5,11 +5,13 @@ open Fable.Core.JsInterop
 open Fable.Import.Browser
 open Fable.Import
 
+open Shared
+let browserp:WebExtBrowser = importDefault "chrome-promise"
+
 open Fable.PowerPack
 open Fable.PowerPack.Fetch
 open Fable.PowerPack.Date
 
-open Shared
 
 open System
 open System.Text.RegularExpressions
@@ -26,7 +28,7 @@ type [<Pojo>] SearchElem = {Url:ElemUrl; UrlStr:string; Text:string option;}
 
 let GetText url = async {
         try
-            let! res = fetch url [Mode RequestMode.Sameorigin] |> Async.AwaitPromise
+            let! res = fetch url [Mode RequestMode.Cors] |> Async.AwaitPromise
             let! restxt = res.text () |> Async.AwaitPromise
             return ok restxt
         with
@@ -36,26 +38,31 @@ let GetText url = async {
 let HTMLToText x =
     Regex.Replace (x, @"<(.|\n)*?>", "")
 
-let SearchOptions keys threshold maxres =
+let SearchOptions threshold =
     createObj [
-        "keys" ==> keys;
-        "threshold" ==> threshold;
-        "limit" ==> maxres;
+        "expand" ==> true
     ]
 
-type [<Pojo>] FuzzyResult<'T> = {score:int; target:string; obj:'T}
+type [<Pojo>] ElasticSearchRes = {ref:int; score:float}
+type ElasticIndex = {addDoc: obj -> unit; search: string -> obj -> ElasticSearchRes array}
+type ElasticThis = {addField:string -> unit; setRef:string -> unit; saveDocument: bool -> unit}
+type Elasticlunr = (ElasticThis -> unit) -> ElasticIndex
+let elasticlunr:Elasticlunr = importDefault "elasticlunr"
 
-let fuzzysort:obj = importDefault "fuzzysort"
-[<Emit("fuzzysort.goAsync($0,$1,$2)")>]
-let fsgoasync x y z :JS.Promise<FuzzyResult<_> array> = jsNative
-
-let SearchElemArray (arr:SearchElem array) keys threshold maxres query =
+let SearchElemArray (arr:SearchElem array) keys threshold query =
     async {
         try
-            let opts = (SearchOptions keys threshold maxres)
-            let! x = fsgoasync query arr opts |> Async.AwaitPromise
+            let opts = (SearchOptions threshold)
 
-            return ok (x |> Array.map (fun {obj={Url=x}} -> x))
+            let i = elasticlunr (fun x ->
+                keys |> Array.iter (fun y -> x.addField(y))
+                x.saveDocument false
+            )
+
+            arr |> Array.iteri (fun index y -> i.addDoc(y |> box |> (fun x -> x?id <- index; x)))
+            let x = i.search query opts
+
+            return ok (x |> Array.filter (fun {score=x} -> x >= threshold) |> Array.map (fun {ref=x} -> Array.item x arr |> function | {Url=x} -> x))
         with | error -> return fail error.Message
     } |> AR
 
@@ -68,29 +75,28 @@ let ValidateNumber x =
     with | error -> fail error.Message
 
 let GetBookmarks () = async {
-    let! tree = browser.bookmarks.search (createObj []) |> Async.AwaitPromise
+    let! tree = browserp.bookmarks.search (createObj []) |> Async.AwaitPromise
     return tree |> Array.choose (function {url=x} -> x)
 }
 
-let GetHistory days maxres = async {
+let GetHistory (days:float) maxres = async {
     let options =
         createObj [
-            "text" ==> ""
-            "startTime" ==> DateTime.Now - (TimeSpan.FromDays days)
+            "text" ==> "";
+            "startTime" ==> ((864000.0*days |> int)+(DateTimeOffset.Now.ToUnixTimeSeconds() |> int));
             "maxResults" ==> maxres
         ]
-    let! history = browser.history.search options |> Async.AwaitPromise
+    let! history = browserp.history.search options |> Async.AwaitPromise
     return history |> Array.choose (fun {url=url} -> url)
 }
 
 let Equals x y = x=y
 
-let SearchRes {ToSearch=tosearch;Accuracy=accuracy;MaxResults=maxres;HistoryDays=historydays;HistoryResults=historyresults;HistoryBookmarks=historybookmarks;SearchMethod=searchmethod} = asyncTrial {
+let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;HistoryResults=historyresults;HistoryBookmarks=historybookmarks;SearchMethod=searchmethod} = asyncTrial {
     Searching |> SetState
 
     let! tosearch = tosearch |> ValidateSearch
     let accuracy = accuracy |> float
-    let maxres = maxres |> int
 
     let dohistory = [0;1] |> List.exists (Equals historybookmarks)
     let dobookmarks = [0;2] |> List.exists (Equals historybookmarks)
@@ -120,7 +126,7 @@ let SearchRes {ToSearch=tosearch;Accuracy=accuracy;MaxResults=maxres;HistoryDays
             return [||]
     }
 
-    let urls = Array.append bookmarks history |> Array.distinct
+    let urls = Array.append bookmarks history
 
     let format x =
         Regex.Replace (x, @"\n" ," ")
@@ -136,7 +142,7 @@ let SearchRes {ToSearch=tosearch;Accuracy=accuracy;MaxResults=maxres;HistoryDays
                 }
             | false -> asyncTrial {return urls |> Array.map (fun x -> {Url=x;UrlStr=EUrlStr x;Text=None})}
 
-    let! res = SearchElemArray elems keys accuracy maxres tosearch
+    let! res = SearchElemArray elems keys accuracy tosearch
     return res
 }
 
