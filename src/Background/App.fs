@@ -56,7 +56,7 @@ let importLunr x =
 let supportedlanguages = ["en"; "ru"]
 
 importDefault "./lunr-languages/min/lunr.stemmer.support.min.js" |> importLunr
-let languages = browserp.i18n.getAcceptLanguages () |> Promise.bind (Array.filter (fun x -> List.exists (fun y -> y=x) supportedlanguages) >> Promise.lift)
+let languages = browser.i18n.getAcceptLanguages () |> Promise.bind (Array.filter (fun x -> List.exists (fun y -> y=x) supportedlanguages) >> Promise.lift)
                 |> Promise.bind (Array.map
                     (fun x ->
                         match x with
