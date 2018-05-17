@@ -1,48 +1,98 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <script src="popup.js" ></script>
-  <script src="commons.js" ></script>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="popup.js"></script>
+    <script src="commons.js"></script>
+    <link rel="stylesheet" href="uik/uik.min.css">
+    <script src="uik/uik-all.js"></script>
 </head>
 <body>
-  <fieldset>
-    <legend>Search</legend>
-    <div class="flexfield" >
-      <label>To search for:</label><input id="tosearch" >
-      <select id="historybookmarks">
-        <option value="0" selected="selected" >Both</option>
-        <option value="1" >History</option>
-        <option value="2" >Bookmarks</option>
-      </select>
-      <select id="searchmethod">
-        <option value="0" selected="selected" >Both</option>
-        <option value="1" >Url</option>
-        <option value="2" >Text</option>
-      </select>
-    </div>
-    <div class="flexfield" >
-      <label>Accuracy:</label><input type="range" id="accuracy" min="0" value="0" step="0.1" max="1">
-    </div>
-    <div class="flexfield" >
-      <label>Language:</label>
-      <select id="language">
-        <option value="en" selected="selected" >EN</option>
-        <option value="ru" >RU</option>
-      </select>
-    </div>
-  </fieldset>
-  <fieldset>
-    <legend>History</legend>
-    <div class="flexfield" >
-      <label>Max Days:</label><input value="1" type="number" id="historydays" >
-    </div>
-    <div class="flexfield" >
-      <label>Max Results:</label><input value="100" type="number" id="historyresults" >
-    </div>
-  </fieldset>
 
-  <button id="search" disabled="true" >Search</button>
+    <div class="uk-container uk-margin-medium-top">
+        <div class="uk-flex uk-light">
+            <input class="uk-input lctosearch lcplaceholder locale" id="tosearch" type="text" >
+            <div class="uk-flex-none">
+                <select class="uk-select" id="historybookmarks">
+                    <option value="0" class="lcboth locale" selected="selected"></option>
+                    <option value="1" class="lchistory locale" ></option>
+                    <option value="2" class="lcbookmarks locale" ></option>
+                </select>
+            </div>
+            <div class="uk-flex-none">
+                <select class="uk-select" id="searchmethod">
+                    <option value="0" class="lcboth locale" selected="selected"></option>
+                    <option value="1" class="lcurl locale" ></option>
+                    <option value="2" class="lctext locale" ></option>
+                </select>
+            </div>
+            <div class="uk-flex-none">
+                <button id="search" class="uk-button uk-button-default lcsearch locale" disabled="true">Search</button>
+            </div>
+        </div>
+        <div class="uk-margin">
+            <ul uk-accordion class="uk-light">
+                <li>
+                    <a class="uk-accordion-title" href="#"><span class="uk-align-left uk-margin-remove uk-flex uk-flex-row uk-flex-middle"><span uk-icon="cog" class="uk-icon uk-margin-right" ></span>
+                        <span class="lcsettings locale" ></span></span></a>
+                    <div class="uk-accordion-content uk-padding-small uk-margin-remove">
+                        <div class="uk-flex uk-flex-row uk-flex-around uk-flex-middle uk-margin-bottom uk-light">
+                            <label class="uk-form-label lcaccuracy locale"></label>
+                            <input type="range" class="uk-range" id="accuracy" min="0" value="0" step="0.1" max="1">
+                        </div>
+                        <div class="uk-flex uk-flex-column uk-margin uk-light">
+                            <div class="uk-margin-bottom uk-flex uk-flex-row uk-flex-around uk-flex-middle">
+                                <label class="uk-form-label uk-width-auto lcmaxdays locale"></label>
+                                <input class="uk-input" value="1" type="number" id="historydays">
+                            </div>
+                            <div class="uk-flex uk-flex-row uk-flex-around uk-flex-middle">
+                                <label class="uk-form-label uk-width-auto lcmaxres locale"></label>
+                                <input class="uk-input" value="100" type="number" id="historyresults">
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                <a class="uk-accordion-title" href="#"><span class="uk-align-left uk-margin-remove uk-flex uk-flex-row uk-flex-middle"><span uk-icon="info" class="uk-icon uk-margin-right" ></span> About</span></a>
+                    <div class="about uk-accordion-content uk-align-left uk-padding-small uk-margin-remove">
+                        <h3>BookmarkSearch</h3>
 
-  <div id="status" ></div>
+                        <p>This extension allows you to find that darn lost bookmark or that site about Mashed potato recipies you visited a long time ago by text or by url.</p>
+                        <p>Made possible by:</p>
+                        <ul>
+                            <li>aolko</li>
+                            <li>ThomasQM</li>
+                        </ul>
+                        <p><a href="https://github.com/Thomas-QM/BookmarkSearch">Github</a></p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!--<div class="uk-margin">
+            <div class="uk-flex uk-light">
+                <h2 class="uk-margin-remove"><span uk-icon="cog"></span> Settings</h2>
+            </div>
+            <div class="uk-flex uk-flex-column uk-margin-bottom uk-light">
+                <label class="uk-form-label uk-margin-small">Accuracy</label>
+                <input type="range" class="uk-range" id="accuracy" min="0" value="0" step="0.1" max="1">
+            </div>
+            <div class="uk-flex uk-margin uk-light">
+                <div class="uk-flex uk-flex-row uk-flex-middle uk-width-1-2">
+                    <label class="uk-form-label uk-width-auto">Max days</label>
+                    <input class="uk-input" value="1" type="number" id="historydays">
+                </div>
+                <div class="uk-flex uk-flex-row uk-flex-middle uk-width-1-2">
+                    <label class="uk-form-label uk-width-auto">Max results</label>
+                    <input class="uk-input" value="100" type="number" id="historyresults">
+                </div>
+            </div>
+        </div>-->
+    </div>
+
+    <div id="status" class="uk-margin uk-margin-left" ></div>
 </body>
 </html>

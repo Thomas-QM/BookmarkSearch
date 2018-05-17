@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css?family=Lato:400,700|Open+Sans:400,600,700|Roboto:400,500,700&subset=cyrillic');
+
+$color__bg: hsl(200,19,10) linear-gradient(135deg, #122630 0%,#141719 99%);
+
+$shadow_6: 0px 1px 10px 0px rgba(0, 0, 0, 0.6);
+$shadow_4: 0px 1px 10px 0px rgba(0, 0, 0, 0.4);
+
+html {
+  box-sizing: content-box;
+  min-width: 500px;
+}
+
+.uk-accordion-title:focus, .uk-accordion-title:hover {
+  color: #90CAF9 !important;
+}
+
+// *::before,
+// *,
+// *::after {
+//   box-sizing: inherit;
+//   margin: 0;
+//   padding: 0;
+// }
+
+body{
+  font-family: 'Open Sans',sans-serif;
+  background: $color__bg;
+}
+
+.about {
+  white-space: normal;
+}
+
+#status {
+  color: white;
+}
+
+.link {
+  flex-grow: 0.7
+}
+
+input[type=range] {
+  width: 50%;
+}
+
+.urltype {
+  color: #9E9E9E
+}
+
+label:not(.lcaccuracy) {
+  flex-basis: 80%;
+}
+
+/*
+.uk-input, .uk-select, .uk-textarea{
+  background: hsl(0, 0%, 25%);
+  color: white;//
+}
+.uk-select{
+  option{
+    background: white;
+    color: hsl(0, 0%, 25%);
+  }
+}
+
+input[type="range" i] {
+  background: hsl(0, 0%, 25%);
+  color: hsl(0, 0%, 25%);
+}*/

@@ -63,7 +63,7 @@ function getModuleRules(isProduction) {
       },
     },
     {
-      test: /\.sass$/,
+      test: /\.scss$/,
       exclude: /node_modules/,
       use: [
         "style-loader", // creates style nodes from JS strings

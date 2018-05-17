@@ -1,0 +1,35 @@
+{
+    "search": {
+        "message":"Search"
+    },
+    "settings": {
+        "message":"Settings"
+    },
+    "tosearch": {
+        "message":"To search for"
+    },
+    "accuracy": {
+        "message":"Accuracy:"
+    },
+    "history": {
+        "message":"History"
+    },
+    "maxdays": {
+        "message":"Max Days (history only):"
+    },
+    "maxres": {
+        "message":"Max Results (history only):"
+    },
+    "both": {
+        "message":"Both"
+    },
+    "bookmarks": {
+        "message":"Bookmarks"
+    },
+    "text": {
+        "message":"Text"
+    },
+    "url": {
+        "message":"Url"
+    }
+}

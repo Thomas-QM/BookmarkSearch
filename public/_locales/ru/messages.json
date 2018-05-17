@@ -1,0 +1,32 @@
+{
+    "search": {
+        "message":"Поиск"
+    },
+    "tosearch": {
+        "message":"Текст для поиска"
+    },
+    "accuracy": {
+        "message":"Точность:"
+    },
+    "history": {
+        "message":"История"
+    },
+    "maxdays": {
+        "message":"Макс. дней:"
+    },
+    "maxres": {
+        "message":"Макс. результатов:"
+    },
+    "both": {
+        "message":"По всему"
+    },
+    "bookmarks": {
+        "message":"По закладкам"
+    },
+    "text": {
+        "message":"По тексту"
+    },
+    "url": {
+        "message":"Url"
+    }
+}

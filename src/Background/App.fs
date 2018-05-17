@@ -45,16 +45,35 @@ let SearchOptions threshold =
 
 type [<Pojo>] ElasticSearchRes = {ref:int; score:float}
 type ElasticIndex = {addDoc: obj -> unit; search: string -> obj -> ElasticSearchRes array}
-type ElasticThis = {addField:string -> unit; setRef:string -> unit; saveDocument: bool -> unit}
+type ElasticThis = {addField:string -> unit; setRef:string -> unit; saveDocument: bool -> unit; ``use``:obj -> unit}
 type Elasticlunr = (ElasticThis -> unit) -> ElasticIndex
-let elasticlunr:Elasticlunr = importDefault "elasticlunr"
+let elasticlunr:obj = importDefault "elasticlunr"
+let stopwordfilter:obj -> unit = importDefault "./lunr-languages/stopwordfilter.js"
+elasticlunr |> stopwordfilter
+
+let importLunr x =
+    x(elasticlunr) |> ignore
+
+let supportedlanguages = ["ru"]
+
+let currentlanguage =
+    if language <> "en" then
+        importDefault "./lunr-languages/min/lunr.stemmer.support.min.js" |> importLunr
+        if language = "ru" then
+            importDefault "./lunr-languages/min/lunr.ru.min.js" |> importLunr
 
 let SearchElemArray (arr:SearchElem array) keys threshold query =
     async {
         try
             let opts = (SearchOptions threshold)
 
-            let i = elasticlunr (fun x ->
+            let elasticlunrfunc:Elasticlunr = !!elasticlunr
+            let i = elasticlunrfunc (fun x ->
+                match List.tryFind (fun x -> x=language) supportedlanguages with
+                    | Some lang ->
+                        x.``use`` (elasticlunr?(lang) |> (!!))
+                    | None -> ()
+
                 keys |> Array.iter (fun y -> x.addField(y))
                 x.saveDocument false
             )
