@@ -66,14 +66,19 @@ let HandleState x =
     match x with
         | Searching x ->
             match x with
-                | Some i -> sprintf "Searching... <span class=\"progress uk-text-bold\">%i%%</span>" i
-                | None -> "Searching..."
+                | RetrievingUrls ->
+                    "Retrieving urls... <div title=\"Retrieving urls...\" uk-spinner=\"ratio: 0.5\"></div>"
+                | GettingText ->
+                    "Getting text... <div title=\"Getting text...\" uk-spinner=\"ratio: 0.5\"></div>"
+                | Indexing i ->
+                    sprintf "Indexing... <span title=\"Indexing...\" class=\"progress uk-text-bold\">%i%%</span>" i
+                | SearchStage.Searching -> "Searching... <div title=\"Searching...\" uk-spinner=\"ratio: 0.5\"></div>"
             |> SetStatus
         | Finished (Pass x) when Array.length x > 0 ->
             SetStatus (x |> Array.mapi (fun i x ->
                             let pre = match x with | Bookmark _ -> browser.i18n.getMessage "bookmark" | History _ -> browser.i18n.getMessage "history"
                             let x2 = EUrlStr x |> function | x when x.Length > 65 -> sprintf "%s..." (x.Substring (0,62)) | x -> x
-                            sprintf "<p id='a%i' class=\"uk-flex uk-flex-around uk-flex-top\" ><span class=\"urltype\" >%s</span><a class=\"link\" >%s</a></p>" i pre x2) |> Array.reduce (+))
+                            sprintf "<div class=\"uk-grid uk-margin-small\" ><span class=\"urltype uk-label uk-width-small\" >%s</span><a class=\"link uk-width-medium\" id='a%i' >%s</a></p>" pre i x2) |> Array.reduce (+))
             x |> Array.iteri (fun i x -> let a:HTMLLinkElement = (!!document.querySelector (sprintf "#a%i" i))
                                          a.onclick <-
                                             (fun _ -> browser.tabs.create (createObj ["url" ==> EUrlStr x])))

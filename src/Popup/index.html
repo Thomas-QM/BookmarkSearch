@@ -34,24 +34,22 @@
             </div>
         </div>
         <div class="uk-margin">
-            <ul uk-accordion class="uk-light">
+            <ul uk-accordion="active:0" class="uk-light">
                 <li>
                     <a class="uk-accordion-title" href="#"><span class="uk-align-left uk-margin-remove uk-flex uk-flex-row uk-flex-middle"><span uk-icon="cog" class="uk-icon uk-margin-right" ></span>
                         <span class="lcsettings locale" ></span></span></a>
-                    <div class="uk-accordion-content uk-padding-small uk-margin-remove">
-                        <div class="uk-flex uk-flex-row uk-flex-around uk-flex-middle uk-margin-bottom uk-light">
-                            <label class="uk-form-label lcaccuracy locale"></label>
-                            <input type="range" class="uk-range" id="accuracy" min="0" value="0" step="0.1" max="1">
+                    <div class="uk-accordion-content uk-grid">
+                        <div class="uk-vertical-align uk-light uk-grid uk-width">
+                            <label class="uk-form-label uk-width-1-2 uk-flex uk-flex-middle lcaccuracy locale"></label>
+                            <input type="range" class="uk-range uk-padding-remove-left uk-width-1-2" id="accuracy" min="0" value="0" step="0.1" max="1">
                         </div>
-                        <div class="uk-flex uk-flex-column uk-margin uk-light">
-                            <div class="uk-margin-bottom uk-flex uk-flex-row uk-flex-around uk-flex-middle">
-                                <label class="uk-form-label uk-width-auto lcmaxdays locale"></label>
-                                <input class="uk-input" value="1" type="number" id="historydays">
-                            </div>
-                            <div class="uk-flex uk-flex-row uk-flex-around uk-flex-middle">
-                                <label class="uk-form-label uk-width-auto lcmaxres locale"></label>
-                                <input class="uk-input" value="100" type="number" id="historyresults">
-                            </div>
+                        <div class="uk-vertical-align uk-grid uk-width">
+                            <label class="uk-form-label uk-width-1-2 uk-flex uk-flex-middle lcmaxdays locale"></label>
+                            <input class="uk-input uk-padding-small uk-width-1-2" value="1" type="number" id="historydays">
+                        </div>
+                        <div class="uk-grid uk-width">
+                            <label class="uk-form-label uk-width-1-2 uk-flex uk-flex-middle lcmaxres locale"></label>
+                            <input class="uk-input uk-padding-small uk-width-1-2" value="100" type="number" id="historyresults">
                         </div>
                     </div>
                 </li>
@@ -93,6 +91,6 @@
         </div>-->
     </div>
 
-    <div id="status" class="uk-margin uk-margin-left" ></div>
+    <div id="status" class="uk-margin uk-margin-left uk-grid" uk-scrollspy="target: > div; cls:uk-animation-fade; delay: 100" ></div>
 </body>
 </html>

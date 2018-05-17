@@ -17,7 +17,6 @@ open Chessie.ErrorHandling
 open System
 open System.Text.RegularExpressions
 
-
 let defaultstate = Idle
 let mutable state = defaultstate
 let SetState x =
@@ -25,6 +24,9 @@ let SetState x =
     browser.runtime.sendMessage (box (x |> StateUpdate))
 
 type [<Pojo>] SearchElem = {Url:ElemUrl; UrlStr:string; Text:string option;}
+
+let getpercent x total =
+    ((float x/float total)*100.0) |> int
 
 let GetText url = async {
         try
@@ -102,7 +104,9 @@ let SearchElemArray (arr:SearchElem array) keys threshold query =
             )
 
             let withi = arr |> Array.mapi (fun i -> box >> (fun x -> x?id <- i; x))
-            do! LoopArr withi (fun id total x -> Searching (((float id/float total)*100.0) |> int |> Some) |> SetState; i.addDoc(x))
+            do! LoopArr withi (fun id total x -> Indexing (getpercent id total) |> Searching |> SetState; i.addDoc(x))
+
+            Searching SearchStage.Searching |> SetState
             let x = i.search query opts
 
             return ok (x |> Array.filter (fun {score=x} -> x >= threshold) |> Array.map (fun {ref=x} -> Array.item x arr |> function | {Url=x} -> x) |> Array.distinct)
@@ -136,7 +140,7 @@ let GetHistory (days:float) maxres = async {
 let Equals x y = x=y
 
 let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;HistoryResults=historyresults;HistoryBookmarks=historybookmarks;SearchMethod=searchmethod} = asyncTrial {
-    Searching None |> SetState
+    Searching RetrievingUrls |> SetState
 
     let! tosearch = tosearch |> ValidateSearch
     let accuracy = accuracy |> float
@@ -177,6 +181,8 @@ let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;Histo
     let! elems =
         match dohtml with
             | true -> asyncTrial {
+                    let len = urls |> Array.length
+                    GettingText |> Searching |> SetState
                     let! response = urls |> Array.map (EUrlStr >> GetText) |> Async.Parallel
                     let text = response |> Array.map (function | Pass x -> Some (x |> HTMLToText |> format) | _ -> None)
 

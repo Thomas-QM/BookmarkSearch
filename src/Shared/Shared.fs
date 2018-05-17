@@ -19,9 +19,16 @@ type JSEvent = {addListener:Func<obj,unit> -> unit; removeListener:Func<obj,unit
 type ElemUrl = History of string | Bookmark of string
 let EUrlStr = function | Bookmark x | History x -> x
 
+type SearchStage =
+    | RetrievingUrls
+    | GettingText
+    | Indexing of int
+    | Searching
+
+
 type State =
     | Idle
-    | Searching of int option
+    | Searching of SearchStage
     | Finished of Result<ElemUrl array,string>
 
 type HTMLDataElements = {ToSearch:string; Accuracy:string; HistoryDays:string; HistoryResults:string; HistoryBookmarks:int; SearchMethod:int;}

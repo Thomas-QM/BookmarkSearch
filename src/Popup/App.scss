@@ -35,23 +35,6 @@ body{
   color: white;
 }
 
-.link {
-  flex-basis: 70%;
-  flex-grow: 0.5;
-}
-
-input[type=range] {
-  width: 50%;
-}
-
-.urltype {
-  color: #9E9E9E
-}
-
-label:not(.lcaccuracy) {
-  flex-basis: 80%;
-}
-
 /*
 .uk-input, .uk-select, .uk-textarea{
   background: hsl(0, 0%, 25%);
