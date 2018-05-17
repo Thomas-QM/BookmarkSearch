@@ -2,6 +2,9 @@
     "search": {
         "message":"Поиск"
     },
+    "settings": {
+        "message":"Параметры"
+    },
     "tosearch": {
         "message":"Текст для поиска"
     },
