@@ -11,11 +11,11 @@ open Fable.PowerPack
 open Fable.PowerPack.Fetch
 open Fable.PowerPack.Date
 
+open Chessie.ErrorHandling
 
 open System
 open System.Text.RegularExpressions
 
-open Chessie.ErrorHandling
 
 let defaultstate = Idle
 let mutable state = defaultstate
@@ -154,10 +154,9 @@ let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;Histo
         match dohtml with
             | true -> asyncTrial {
                     let! response = urls |> Array.map (EUrlStr >> GetText) |> Async.Parallel
-                    let html = response |> Array.choose (function | Pass x -> Some x | _ -> None) |> Array.map format
-                    let text = html |> Array.map HTMLToText
+                    let text = response |> Array.map (function | Pass x -> Some (x |> format |> HTMLToText) | _ -> None)
 
-                    return Array.zip urls text |> Array.map (fun (url, txt) -> {Url=url;UrlStr=EUrlStr url;Text=Some txt})
+                    return Array.zip urls text |> Array.map (fun (url, txt) -> {Url=url;UrlStr=EUrlStr url;Text=txt})
                 }
             | false -> asyncTrial {return urls |> Array.map (fun x -> {Url=x;UrlStr=EUrlStr x;Text=None})}
 
