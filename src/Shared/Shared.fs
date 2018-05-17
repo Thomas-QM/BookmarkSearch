@@ -43,4 +43,5 @@ type Message =
 
 [<Emit("chrome")>]
 let browser:WebExtBrowser = jsNative
-let language = browser.i18n.getUILanguage ()
+let language =
+    browser.i18n.getUILanguage () |> (fun x -> if x.StartsWith "en" then "en" else x)
