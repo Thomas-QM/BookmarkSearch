@@ -33,7 +33,7 @@ let InitSearch () =
     let sm = document.querySelector "#searchmethod" |> getselectvalue |> int
 
     let d = {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=hd;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;}
-    d |> StartSearch |> box |> browser.runtime.sendMessage
+    d |> StartSearch |> box |> browser.runtime.sendMessage |> Promise.start
 
 window.onload <- (fun _ ->
     let locale:Element array = !![||]?slice?call(document.querySelectorAll ".locale")
