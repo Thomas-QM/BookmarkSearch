@@ -36,7 +36,8 @@ body{
 }
 
 .link {
-  flex-grow: 0.7
+  flex-basis: 70%;
+  flex-grow: 0.5;
 }
 
 input[type=range] {
