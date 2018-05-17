@@ -1,5 +1,6 @@
 var fs = require("fs");
 var path = require("path");
+var webpack = require("webpack")
 var fableUtils = require("fable-utils");
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var HtmlWebpackPolyfillIOPlugin = require('html-webpack-polyfill-io-plugin');
@@ -16,8 +17,7 @@ var config = {
   },
   publicDir: resolve("../public"),
   buildDir: resolve("../build"),
-  nodeModulesDir: resolve("../node_modules"),
-  optimization: {splitChunks: true}
+  nodeModulesDir: resolve("../node_modules")
 }
 
 function resolve(filePath) {
@@ -79,6 +79,9 @@ function getPlugins(isProduction) {
     new CopyWebpackPlugin([ { from: config.publicDir } ]),
     new HtmlWebpackPolyfillIOPlugin({ features: "es6,fetch" }),
     new CopyWebpackPlugin([{from: "../src/Popup/index.html"}]),
+    new webpack.optimize.CommonsChunkPlugin({
+      name:"commons"
+    })
     // new DynamicCdnWebpackPlugin({ verbose: true, only: config.cdnModules }),
   ];
 }

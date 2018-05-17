@@ -65,8 +65,8 @@ let HandleState x =
         | Finished (Pass x) when Array.length x > 0 ->
             SetStatus (x |> Array.mapi (fun i x ->
                             let pre = match x with | Bookmark _ -> browser.i18n.getMessage "bookmark" | History _ -> browser.i18n.getMessage "history"
-                            let x2 = EUrlStr x
-                            sprintf "<p id='a%i' class=\"uk-flex uk-flex-around uk-flex-middle\" ><span class=\"urltype\" >%s</span><a class=\"link uk-flex uk-flex-center\" >%s</a></p>" i pre x2) |> Array.reduce (+))
+                            let x2 = EUrlStr x |> function | x when x.Length > 65 -> sprintf "%s..." (x.Substring (0,62)) | x -> x
+                            sprintf "<p id='a%i' class=\"uk-flex uk-flex-around uk-flex-top\" ><span class=\"urltype\" >%s</span><a class=\"link\" >%s</a></p>" i pre x2) |> Array.reduce (+))
             x |> Array.iteri (fun i x -> let a:HTMLLinkElement = (!!document.querySelector (sprintf "#a%i" i))
                                          a.onclick <-
                                             (fun _ -> browser.tabs.create (createObj ["url" ==> EUrlStr x])))
