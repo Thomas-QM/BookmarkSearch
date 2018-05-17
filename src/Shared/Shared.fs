@@ -33,7 +33,7 @@ type WebExtHistory = {search:obj -> JS.Promise<HistoryItem array>}
 type WebExtTabs = {create:obj -> unit}
 type BGPage = {state:State}
 type WebExtRuntime = {getBackgroundPage: unit -> JS.Promise<BGPage>; sendMessage:obj -> unit; onMessage:JSEvent}
-type WebExtLocale = {getUILanguage: unit -> string; getMessage: string -> string}
+type WebExtLocale = {getUILanguage: unit -> string; getAcceptLanguages:unit -> JS.Promise<string array>; getMessage: string -> string}
 type WebExtBrowser = {bookmarks:WebExtBookmarks; tabs:WebExtTabs; runtime:WebExtRuntime; history:WebExtHistory; i18n:WebExtLocale}
 
 type Message =
@@ -43,5 +43,3 @@ type Message =
 
 [<Emit("chrome")>]
 let browser:WebExtBrowser = jsNative
-let language =
-    browser.i18n.getUILanguage () |> (fun x -> if x.StartsWith "en" then "en" else x)

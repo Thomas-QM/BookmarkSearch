@@ -54,13 +54,21 @@ elasticlunr |> stopwordfilter
 let importLunr x =
     x(elasticlunr) |> ignore
 
-let supportedlanguages = ["ru"]
+let supportedlanguages = ["en"; "ru"]
 
-let currentlanguage =
-    if language <> "en" then
-        importDefault "./lunr-languages/min/lunr.stemmer.support.min.js" |> importLunr
-        if language = "ru" then
-            importDefault "./lunr-languages/min/lunr.ru.min.js" |> importLunr
+importDefault "./lunr-languages/min/lunr.stemmer.support.min.js" |> importLunr
+let languages = browserp.i18n.getAcceptLanguages () |> Promise.bind (Array.filter (fun x -> List.exists (fun y -> y=x) supportedlanguages) >> Promise.lift)
+                |> Promise.bind (Array.map
+                    (fun x ->
+                        match x with
+                            | "ru" -> importDefault "./lunr-languages/min/lunr.ru.min.js" |> importLunr
+                            | _ -> ()
+                        x) >> Promise.lift)
+
+importDefault "./lunr-languages/min/lunr.multi.min.js" |> importLunr
+
+[<Emit("$0.multiLanguage(...$1)")>]
+let usemultilanguage (x:obj) (y:string array) : obj = jsNative
 
 let SearchElemArray (arr:SearchElem array) keys threshold query =
     async {
@@ -68,11 +76,12 @@ let SearchElemArray (arr:SearchElem array) keys threshold query =
             let opts = (SearchOptions threshold)
 
             let elasticlunrfunc:Elasticlunr = !!elasticlunr
+            let! languages = languages |> Async.AwaitPromise
+            console.log languages
+            console.log (languages)
             let i = elasticlunrfunc (fun x ->
-                match List.tryFind (fun x -> x=language) supportedlanguages with
-                    | Some lang ->
-                        x.``use`` (elasticlunr?(lang) |> (!!))
-                    | None -> ()
+                if languages.Length > 0 then
+                    x.``use`` (usemultilanguage elasticlunr languages)
 
                 keys |> Array.iter (fun y -> x.addField(y))
                 x.saveDocument false
