@@ -36,7 +36,7 @@ window.onload <- (fun _ ->
 
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
 
-    GetState |> box |> browser.runtime.sendMessage
+    GetState |> box |> browser.runtime.sendMessage |> Promise.start
 
     searchbutton.onclick <- (fun _ ->
         let tosearch = document.querySelector "#tosearch" |> getvalue

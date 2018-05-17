@@ -11,6 +11,9 @@
     "accuracy": {
         "message":"Accuracy:"
     },
+    "bookmark": {
+        "message":"Bookmark"
+    },
     "history": {
         "message":"History"
     },

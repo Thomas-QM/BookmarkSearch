@@ -11,6 +11,9 @@
     "history": {
         "message":"История"
     },
+    "bookmark": {
+        "message":"Закладка"
+    },
     "maxdays": {
         "message":"Макс. дней:"
     },

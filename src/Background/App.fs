@@ -6,7 +6,6 @@ open Fable.Import.Browser
 open Fable.Import
 
 open Shared
-let browserp:WebExtBrowser = importDefault "chrome-promise"
 
 open Fable.PowerPack
 open Fable.PowerPack.Fetch
@@ -22,7 +21,7 @@ let defaultstate = Idle
 let mutable state = defaultstate
 let SetState x =
     state <- x
-    browser.runtime.sendMessage (box (x |> StateUpdate))
+    browser.runtime.sendMessage (box (x |> StateUpdate)) |> Promise.start
 
 type [<Pojo>] SearchElem = {Url:ElemUrl; UrlStr:string; Text:string option;}
 
@@ -40,7 +39,7 @@ let HTMLToText x =
 
 let SearchOptions threshold =
     createObj [
-        "expand" ==> true
+        "expand" ==> false
     ]
 
 type [<Pojo>] ElasticSearchRes = {ref:int; score:float}
@@ -63,6 +62,7 @@ let currentlanguage =
             importDefault "./lunr-languages/min/lunr.ru.min.js" |> importLunr
 
 let SearchElemArray (arr:SearchElem array) keys threshold query =
+    console.log arr
     async {
         try
             let opts = (SearchOptions threshold)
@@ -94,7 +94,7 @@ let ValidateNumber x =
     with | error -> fail error.Message
 
 let GetBookmarks () = async {
-    let! tree = browserp.bookmarks.search (createObj []) |> Async.AwaitPromise
+    let! tree = browser.bookmarks.search (createObj []) |> Async.AwaitPromise
     return tree |> Array.choose (function {url=x} -> x)
 }
 
@@ -105,7 +105,7 @@ let GetHistory (days:float) maxres = async {
             "startTime" ==> ((864000.0*days |> int)+(DateTimeOffset.Now.ToUnixTimeSeconds() |> int));
             "maxResults" ==> maxres
         ]
-    let! history = browserp.history.search options |> Async.AwaitPromise
+    let! history = browser.history.search options |> Async.AwaitPromise
     return history |> Array.choose (fun {url=url} -> url)
 }
 
