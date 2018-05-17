@@ -5,6 +5,9 @@
     "settings": {
         "message":"Settings"
     },
+    "bookmark": {
+        "message":"Bookmark"
+    },
     "tosearch": {
         "message":"To search for"
     },

@@ -69,6 +69,21 @@ importDefault "./lunr-languages/min/lunr.multi.min.js" |> importLunr
 [<Emit("$0.multiLanguage(...$1)")>]
 let usemultilanguage (x:obj) (y:string array) : obj = jsNative
 
+let LoopArr arr dowhat = async {
+    let len = Array.length arr
+    let mutable currentindex = 0
+    let timesep = 10
+    let interval =
+        window.setInterval ((fun _ ->
+                                if currentindex < len then
+                                    let x = Array.item currentindex arr
+                                    dowhat currentindex len x
+                                    currentindex<-currentindex+1
+                                ),timesep)
+    do! Async.Sleep ((len+1)*timesep)
+    window.clearInterval(interval)
+}
+
 let SearchElemArray (arr:SearchElem array) keys threshold query =
     console.log arr
     async {
@@ -77,8 +92,7 @@ let SearchElemArray (arr:SearchElem array) keys threshold query =
 
             let elasticlunrfunc:Elasticlunr = !!elasticlunr
             let! languages = languages |> Async.AwaitPromise
-            console.log languages
-            console.log (languages)
+
             let i = elasticlunrfunc (fun x ->
                 if languages.Length > 0 then
                     x.``use`` (usemultilanguage elasticlunr languages)
@@ -87,10 +101,11 @@ let SearchElemArray (arr:SearchElem array) keys threshold query =
                 x.saveDocument false
             )
 
-            arr |> Array.iteri (fun index y -> i.addDoc(y |> box |> (fun x -> x?id <- index; x)))
+            let withi = arr |> Array.mapi (fun i -> box >> (fun x -> x?id <- i; x))
+            do! LoopArr withi (fun id total x -> Searching (((float id/float total)*100.0) |> int |> Some) |> SetState; i.addDoc(x))
             let x = i.search query opts
 
-            return ok (x |> Array.filter (fun {score=x} -> x >= threshold) |> Array.map (fun {ref=x} -> Array.item x arr |> function | {Url=x} -> x))
+            return ok (x |> Array.filter (fun {score=x} -> x >= threshold) |> Array.map (fun {ref=x} -> Array.item x arr |> function | {Url=x} -> x) |> Array.distinct)
         with | error -> return fail error.Message
     } |> AR
 
@@ -121,7 +136,7 @@ let GetHistory (days:float) maxres = async {
 let Equals x y = x=y
 
 let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;HistoryResults=historyresults;HistoryBookmarks=historybookmarks;SearchMethod=searchmethod} = asyncTrial {
-    Searching |> SetState
+    Searching None |> SetState
 
     let! tosearch = tosearch |> ValidateSearch
     let accuracy = accuracy |> float
@@ -157,13 +172,13 @@ let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;Histo
     let urls = Array.append bookmarks history
 
     let format x =
-        Regex.Replace (x, @"\n" ," ")
+        Regex.Replace (x, @"\n" ," ") |> (fun x -> Regex.Replace (x,@"[ ](?= )","")) |> (fun x -> x.Substring (0,80000))
 
     let! elems =
         match dohtml with
             | true -> asyncTrial {
                     let! response = urls |> Array.map (EUrlStr >> GetText) |> Async.Parallel
-                    let text = response |> Array.map (function | Pass x -> Some (x |> format |> HTMLToText) | _ -> None)
+                    let text = response |> Array.map (function | Pass x -> Some (x |> HTMLToText |> format) | _ -> None)
 
                     return Array.zip urls text |> Array.map (fun (url, txt) -> {Url=url;UrlStr=EUrlStr url;Text=txt})
                 }

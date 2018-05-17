@@ -5,6 +5,9 @@
     "settings": {
         "message":"Параметры"
     },
+    "bookmark": {
+        "message":"закладка"
+    },
     "tosearch": {
         "message":"Текст для поиска"
     },

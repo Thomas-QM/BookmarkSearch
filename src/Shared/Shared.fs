@@ -21,7 +21,7 @@ let EUrlStr = function | Bookmark x | History x -> x
 
 type State =
     | Idle
-    | Searching
+    | Searching of int option
     | Finished of Result<ElemUrl array,string>
 
 type HTMLDataElements = {ToSearch:string; Accuracy:string; HistoryDays:string; HistoryResults:string; HistoryBookmarks:int; SearchMethod:int;}

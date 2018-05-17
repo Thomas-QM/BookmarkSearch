@@ -24,6 +24,17 @@ let getvalue (x:obj) =
 let getselectvalue (x:obj) =
     (x :?> HTMLSelectElement).value
 
+let InitSearch () =
+    let tosearch = document.querySelector "#tosearch" |> getvalue
+    let accuracy = document.querySelector "#accuracy" |> getvalue
+    let hd = document.querySelector "#historydays" |> getvalue
+    let hr = document.querySelector "#historyresults" |> getvalue
+    let hb = document.querySelector "#historybookmarks" |> getselectvalue |> int
+    let sm = document.querySelector "#searchmethod" |> getselectvalue |> int
+
+    let d = {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=hd;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;}
+    d |> StartSearch |> box |> browser.runtime.sendMessage
+
 window.onload <- (fun _ ->
     let locale:Element array = !![||]?slice?call(document.querySelectorAll ".locale")
     locale |> Array.iter (fun x ->
@@ -34,20 +45,13 @@ window.onload <- (fun _ ->
             | false -> x?innerText <- msg
     )
 
+    window.onkeypress <- (fun x -> if x.keyCode = 13.0 then InitSearch())
+
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
 
     GetState |> box |> browser.runtime.sendMessage |> Promise.start
 
-    searchbutton.onclick <- (fun _ ->
-        let tosearch = document.querySelector "#tosearch" |> getvalue
-        let accuracy = document.querySelector "#accuracy" |> getvalue
-        let hd = document.querySelector "#historydays" |> getvalue
-        let hr = document.querySelector "#historyresults" |> getvalue
-        let hb = document.querySelector "#historybookmarks" |> getselectvalue |> int
-        let sm = document.querySelector "#searchmethod" |> getselectvalue |> int
-
-        let d = {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=hd;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;}
-        d |> StartSearch |> box |> browser.runtime.sendMessage)
+    searchbutton.onclick <- (ignore >> InitSearch)
 )
 
 let SetStatus x =
@@ -57,11 +61,14 @@ let HandleState x =
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
 
     match x with
-        | Searching -> searchbutton.disabled <- true | _ -> searchbutton.disabled <- false
+        | Searching _ -> searchbutton.disabled <- true | _ -> searchbutton.disabled <- false
 
     match x with
-        | Searching ->
-            SetStatus "Searching..."
+        | Searching x ->
+            match x with
+                | Some i -> sprintf "Searching... <span class=\"progress uk-text-bold\">%i%%</span>" i
+                | None -> "Searching..."
+            |> SetStatus
         | Finished (Pass x) when Array.length x > 0 ->
             SetStatus (x |> Array.mapi (fun i x ->
                             let pre = match x with | Bookmark _ -> browser.i18n.getMessage "bookmark" | History _ -> browser.i18n.getMessage "history"
