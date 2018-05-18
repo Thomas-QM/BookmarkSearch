@@ -45,7 +45,15 @@
                         </div>
                         <div class="uk-grid uk-width">
                             <label class="uk-form-label uk-width-1-2 uk-flex uk-flex-middle lcmaxres locale"></label>
-                            <input class="uk-input uk-padding-small uk-width-1-2" value="100" type="number" id="historyresults">
+                            <input class="uk-input uk-padding-small uk-width-1-2" value="100" min="0" type="number" id="historyresults">
+                        </div>
+                        <div class="uk-grid uk-width">
+                            <label class="uk-form-label uk-width-1-2 uk-flex uk-flex-middle lcmindays locale"></label>
+                            <input class="uk-input uk-padding-small uk-width-1-2" value="0" min="0" type="number" id="historydays">
+                        </div>
+                        <div class="uk-grid uk-width">
+                            <label class="uk-form-label uk-width-1-2 uk-flex uk-flex-middle lcgroupres locale"></label>
+                            <input type="checkbox" class="uk-padding-small uk-checkbox uk-width-1-2" id="group">
                         </div>
                     </div>
                 </li>

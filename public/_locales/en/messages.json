@@ -5,6 +5,9 @@
     "settings": {
         "message":"Settings"
     },
+    "groupres": {
+        "message":"Group results"
+    },
     "bookmark": {
         "message":"Bookmark"
     },
@@ -17,8 +20,8 @@
     "history": {
         "message":"History"
     },
-    "maxdays": {
-        "message":"Max Days (history only):"
+    "mindays": {
+        "message":"Min Days (history only):"
     },
     "maxres": {
         "message":"Max Results (history only):"
