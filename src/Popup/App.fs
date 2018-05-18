@@ -62,31 +62,36 @@ let SetStatus x =
     (document.querySelector "#status").innerHTML <- x
 
 let renderres group x =
-    let divcls = "uk-grid uk-width uk-margin-remove-top uk-margin-small-bottom"
-    let renderurltype =
-        sprintf "<span class=\"urltype uk-label uk-width-1-3 %s\" >%s</span>"
-    let bhtostr = function | Bookmark _ -> "bookmark" | History _ -> "history"
-    let html =
-        if not group then
-            x |> Array.mapi (fun i x ->
-                    let x2 = EUrlStr x |> function | x when x.Length > 65 -> sprintf "%s..." (x.Substring (0,62)) | x -> x
-                    sprintf "<div class=\"%s\" >%s<a class=\"link uk-width-2-3\" id='a%i' >%s</a></div>"
-                        divcls (renderurltype (x |> bhtostr) (x |> bhtostr |> browser.i18n.getMessage)) i x2) |> Array.reduce (+)
-        else
-            let rendersection offset name elems =
-                let elems = elems |> Array.mapi (fun i x -> sprintf "<a class=\"link uk-width\" id='a%i' >%s</a>" (i+offset) x) |> Array.reduce (+)
-                sprintf "<div class=\"%s\" >%s<div class=\"uk-width-2-3 uk-grid\" >%s</div></div>"
-                    divcls (renderurltype name (name |> browser.i18n.getMessage)) elems
+    match x with
+        | [||] -> SetStatus "No results found!"
+        | _ ->
+            let divcls = "uk-grid uk-width uk-margin-remove-top uk-margin-small-bottom"
+            let renderurltype =
+                sprintf "<span class=\"urltype uk-label uk-width-1-3 %s\" >%s</span>"
+            let bhtostr = function | Bookmark _ -> "bookmark" | History _ -> "history"
+            let html =
+                if not group then
+                    x |> Array.mapi (fun i x ->
+                            let x2 = EUrlStr x |> function | x when x.Length > 65 -> sprintf "%s..." (x.Substring (0,62)) | x -> x
+                            sprintf "<div class=\"%s\" >%s<a class=\"link uk-width-2-3\" id='a%i' >%s</a></div>"
+                                divcls (renderurltype (x |> bhtostr) (x |> bhtostr |> browser.i18n.getMessage)) i x2) |> Array.reduce (+)
+                else
+                    let rendersection offset name = function
+                        | [||] -> ""
+                        | elems ->
+                            let elems = elems |> Array.mapi (fun i x -> sprintf "<a class=\"link uk-width\" id='a%i' >%s</a>" (i+offset) x) |> Array.reduce (+)
+                            sprintf "<div class=\"%s\" >%s<div class=\"uk-width-2-3 uk-grid\" >%s</div></div>"
+                                divcls (renderurltype name (name |> browser.i18n.getMessage)) elems
 
-            let bookmarks = x |> Array.choose (function Bookmark x -> Some x | _ -> None)
-            let history = x |> Array.choose (function History x -> Some x | _ -> None)
+                    let bookmarks = x |> Array.choose (function Bookmark x -> Some x | _ -> None)
+                    let history = x |> Array.choose (function History x -> Some x | _ -> None)
 
-            rendersection 0 "bookmarksgroup" bookmarks + rendersection (Array.length bookmarks) "history" history
+                    rendersection 0 "bookmarksgroup" bookmarks + rendersection (Array.length bookmarks) "history" history
 
-    SetStatus html
-    x |> Array.iteri (fun i x -> let a:HTMLLinkElement = (!!document.querySelector (sprintf "#a%i" i))
-                                 a.onclick <-
-                                    (fun _ -> browser.tabs.create (createObj ["url" ==> EUrlStr x])))
+            SetStatus html
+            x |> Array.iteri (fun i x -> let a:HTMLLinkElement = (!!document.querySelector (sprintf "#a%i" i))
+                                         a.onclick <-
+                                            (fun _ -> browser.tabs.create (createObj ["url" ==> EUrlStr x])))
 
 let HandleState x =
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
@@ -111,11 +116,9 @@ let HandleState x =
                     renderprogress "Indexing" prog
                 | SearchStage.Searching -> "Searching... <div title=\"Searching...\" uk-spinner=\"ratio: 0.5\"></div>"
             |> SetStatus
-        | Finished (Pass x) when Array.length x > 0 ->
+        | Finished (Pass x) ->
             let group = document.querySelector "#group" |> getchecked
             renderres group x
-        | Finished (Pass x) ->
-            SetStatus "No results found!"
         | Finished (Fail (x::_)) ->
             SetStatus x
         | _ -> ()
