@@ -105,8 +105,8 @@ let usemultilanguage (x:obj) (y:string array) : obj = jsNative
 
 let LoopArr arr total dowhat = async {
     let timesep = 5
-    arr |> Array.iteri (fun i x -> window.setTimeout(dowhat i x, 5*i) |> ignore)
-    do! Async.Sleep ((total+1)*timesep)
+    arr |> Array.iteri (fun i x -> window.setTimeout(dowhat i x, i*timesep) |> ignore)
+    do! Async.Sleep (total+1*timesep)
 }
 
 let SearchElemArray (arr:SearchElem array) keys threshold query =
@@ -151,11 +151,10 @@ let GetBookmarks () = async {
     return tree |> Array.choose (function {url=x} -> x)
 }
 
-let GetHistory (days:float) maxres = async {
+let GetHistory maxres = async {
     let options =
         createObj [
             "text" ==> "";
-            "startTime" ==> ((864000.0*days |> int)+(DateTimeOffset.Now.ToUnixTimeSeconds() |> int));
             "maxResults" ==> maxres
         ]
     let! history = browser.history.search options |> Async.AwaitPromise
@@ -164,7 +163,7 @@ let GetHistory (days:float) maxres = async {
 
 let Equals x y = x=y
 
-let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;HistoryResults=historyresults;HistoryBookmarks=historybookmarks;SearchMethod=searchmethod} = asyncTrial {
+let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryResults=historyresults;HistoryBookmarks=historybookmarks;SearchMethod=searchmethod} = asyncTrial {
     Searching RetrievingUrls |> SetState |> StateMailbox.Post
 
     let! tosearch = tosearch |> ValidateSearch
@@ -190,9 +189,8 @@ let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;Histo
 
     let! history = asyncTrial {
         if dohistory then
-            let! historydays = historydays |> ValidateNumber
             let! historyres = historyresults |> ValidateNumber
-            let! history = GetHistory historydays historyres
+            let! history = GetHistory historyres
             return history |> Array.map History
         else
             return [||]
