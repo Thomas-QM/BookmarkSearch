@@ -27,13 +27,14 @@ type SearchStage =
     | Indexing of Progress
     | Searching
 
-
 type State =
     | Idle
     | Searching of SearchStage
     | Finished of Result<ElemUrl array,string>
 
-type HTMLDataElements = {ToSearch:string; Accuracy:string; HistoryDays:string; HistoryResults:string; HistoryBookmarks:int; SearchMethod:int;}
+type HTMLDataElements = {ToSearch:string; Group:bool; Accuracy:string; HistoryDays:string; HistoryResults:string; HistoryBookmarks:int; SearchMethod:int;}
+
+type StorageState = {Data:HTMLDataElements;}
 
 type [<Pojo>] BookmarkTree = {url:string option;children:BookmarkTree array option;}
 type [<Pojo>] HistoryItem = {id:string; url:string option}

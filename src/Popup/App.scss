@@ -35,8 +35,12 @@ body{
   color: white;
 }
 
-.bookmark, .bookmarks {
+.bookmark, .bookmarksgroup {
   background: #4CAF50 !important;
+}
+
+a {
+  word-break: break-all;
 }
 
 /*

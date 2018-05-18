@@ -32,6 +32,9 @@
     "bookmarks": {
         "message":"По закладкам"
     },
+    "bookmarksgroup": {
+        "message":"Закладки"
+    },
     "text": {
         "message":"По тексту"
     },

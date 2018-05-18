@@ -29,11 +29,12 @@ let InitSearch () =
     let tosearch = document.querySelector "#tosearch" |> getvalue
     let accuracy = document.querySelector "#accuracy" |> getvalue
     let hdays = document.querySelector "#historydays" |> getvalue
+    let group = document.querySelector "#group" |> getchecked
     let hr = document.querySelector "#historyresults" |> getvalue
     let hb = document.querySelector "#historybookmarks" |> getselectvalue |> int
     let sm = document.querySelector "#searchmethod" |> getselectvalue |> int
 
-    let d = {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=hdays;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;}
+    let d = {ToSearch=tosearch;Group=group;Accuracy=accuracy;HistoryDays=hdays;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;}
     d |> StartSearch |> box |> browser.runtime.sendMessage
 
 let rerender () = GetState |> box |> browser.runtime.sendMessage
@@ -80,7 +81,7 @@ let renderres group x =
             let bookmarks = x |> Array.choose (function Bookmark x -> Some x | _ -> None)
             let history = x |> Array.choose (function History x -> Some x | _ -> None)
 
-            rendersection 0 "bookmarks" bookmarks + rendersection (Array.length bookmarks) "history" history
+            rendersection 0 "bookmarksgroup" bookmarks + rendersection (Array.length bookmarks) "history" history
 
     SetStatus html
     x |> Array.iteri (fun i x -> let a:HTMLLinkElement = (!!document.querySelector (sprintf "#a%i" i))
