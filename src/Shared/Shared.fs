@@ -19,10 +19,12 @@ type JSEvent = {addListener:Func<obj,unit> -> unit; removeListener:Func<obj,unit
 type ElemUrl = History of string | Bookmark of string
 let EUrlStr = function | Bookmark x | History x -> x
 
+type Progress = {Done:int; Total:int}
+
 type SearchStage =
     | RetrievingUrls
-    | GettingText
-    | Indexing of int
+    | GettingText of Progress
+    | Indexing of Progress
     | Searching
 
 

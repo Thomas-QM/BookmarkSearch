@@ -63,15 +63,21 @@ let HandleState x =
     match x with
         | Searching _ -> searchbutton.disabled <- true | _ -> searchbutton.disabled <- false
 
+    let getpercent x total =
+        ((float x/float total)*100.0) |> int
+
+    let renderprogress name {Done=i; Total=t} =
+        sprintf "%s... <span title=\"%s...\" class=\"progress uk-text-bold\">%i%%</span>" name name (getpercent i t)
+
     match x with
         | Searching x ->
             match x with
                 | RetrievingUrls ->
                     "Retrieving urls... <div title=\"Retrieving urls...\" uk-spinner=\"ratio: 0.5\"></div>"
-                | GettingText ->
-                    "Getting text... <div title=\"Getting text...\" uk-spinner=\"ratio: 0.5\"></div>"
-                | Indexing i ->
-                    sprintf "Indexing... <span title=\"Indexing...\" class=\"progress uk-text-bold\">%i%%</span>" i
+                | GettingText prog ->
+                    renderprogress "Getting text" prog
+                | Indexing prog ->
+                    renderprogress "Indexing" prog
                 | SearchStage.Searching -> "Searching... <div title=\"Searching...\" uk-spinner=\"ratio: 0.5\"></div>"
             |> SetStatus
         | Finished (Pass x) when Array.length x > 0 ->

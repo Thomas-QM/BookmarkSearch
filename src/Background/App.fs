@@ -18,15 +18,46 @@ open System
 open System.Text.RegularExpressions
 
 let defaultstate = Idle
-let mutable state = defaultstate
-let SetState x =
-    state <- x
-    browser.runtime.sendMessage (box (x |> StateUpdate))
+
+type StateMessage =
+    | AddProgress
+    | SetTotalProgress of int
+    | SetState of State
+    | SendState
+    | GetState of AsyncReplyChannel<State>
+
+let modprogress x func =
+    match x with
+        | Searching (GettingText y) | Searching (Indexing y) ->
+            let f = match x with Searching (GettingText _) -> GettingText | Searching (Indexing _) -> Indexing
+            func y |> f |> Searching
+        | _ -> x
+
+let sendstate x =
+    browser.runtime.sendMessage (box (x |> StateUpdate)); x
+
+let rec HandleStateMessage (curstate:State) (x:MailboxProcessor<StateMessage>) = async {
+    let! msg = x.Receive ()
+    let newstate =
+        match msg with
+            | AddProgress ->
+                modprogress curstate (fun x ->
+                    let newval = x.Done+1
+                    if newval > x.Total then x
+                                    else {x with Done=newval}) |> sendstate
+            | SetTotalProgress newtotal ->
+                modprogress curstate (fun x -> {x with Total=newtotal}) |> sendstate
+            | SetState x -> sendstate x
+            | SendState -> sendstate curstate
+            | GetState x -> x.Reply (curstate); curstate
+
+    return! HandleStateMessage newstate x
+}
+
+
+let StateMailbox = MailboxProcessor.Start (HandleStateMessage defaultstate)
 
 type [<Pojo>] SearchElem = {Url:ElemUrl; UrlStr:string; Text:string option;}
-
-let getpercent x total =
-    ((float x/float total)*100.0) |> int
 
 let GetText url = async {
         try
@@ -34,7 +65,8 @@ let GetText url = async {
             let! restxt = res.text () |> Async.AwaitPromise
             return ok restxt
         with
-            | error -> return fail error
+            | error ->
+                return fail error
 }
 
 let HTMLToText x =
@@ -72,19 +104,10 @@ importDefault "./lunr-languages/min/lunr.multi.min.js" |> importLunr
 [<Emit("$0.multiLanguage(...$1)")>]
 let usemultilanguage (x:obj) (y:string array) : obj = jsNative
 
-let LoopArr arr dowhat = async {
-    let len = Array.length arr
-    let mutable currentindex = 0
-    let timesep = 10
-    let interval =
-        window.setInterval ((fun _ ->
-                                if currentindex < len then
-                                    let x = Array.item currentindex arr
-                                    dowhat currentindex len x
-                                    currentindex<-currentindex+1
-                                ),timesep)
-    do! Async.Sleep ((len+1)*timesep)
-    window.clearInterval(interval)
+let LoopArr arr total dowhat = async {
+    let timesep = 5
+    arr |> Array.iteri (fun i x -> window.setTimeout(dowhat i x, 5*i) |> ignore)
+    do! Async.Sleep ((total+1)*timesep)
 }
 
 let SearchElemArray (arr:SearchElem array) keys threshold query =
@@ -103,10 +126,12 @@ let SearchElemArray (arr:SearchElem array) keys threshold query =
                 x.saveDocument false
             )
 
+            let total = Array.length arr
+            {Done=0;Total=total} |> Indexing |> Searching |> SetState |> StateMailbox.Post
             let withi = arr |> Array.mapi (fun i -> box >> (fun x -> x?id <- i; x))
-            do! LoopArr withi (fun id total x -> Indexing (getpercent id total) |> Searching |> SetState; i.addDoc(x))
+            do! LoopArr withi total (fun id x -> StateMailbox.Post AddProgress; i.addDoc(x))
 
-            Searching SearchStage.Searching |> SetState
+            Searching SearchStage.Searching |> SetState |> StateMailbox.Post
             let x = i.search query opts
 
             return ok (x |> Array.filter (fun {score=x} -> x >= threshold) |> Array.map (fun {ref=x} -> Array.item x arr |> function | {Url=x} -> x) |> Array.distinct)
@@ -140,7 +165,7 @@ let GetHistory (days:float) maxres = async {
 let Equals x y = x=y
 
 let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;HistoryResults=historyresults;HistoryBookmarks=historybookmarks;SearchMethod=searchmethod} = asyncTrial {
-    Searching RetrievingUrls |> SetState
+    Searching RetrievingUrls |> SetState |> StateMailbox.Post
 
     let! tosearch = tosearch |> ValidateSearch
     let accuracy = accuracy |> float
@@ -182,8 +207,10 @@ let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;Histo
         match dohtml with
             | true -> asyncTrial {
                     let len = urls |> Array.length
-                    GettingText |> Searching |> SetState
-                    let! response = urls |> Array.map (EUrlStr >> GetText) |> Async.Parallel
+                    GettingText {Done=0;Total=len} |> Searching |> SetState |> StateMailbox.Post
+                    let! response = urls |> Array.map (fun x -> async { let! res = EUrlStr x |> GetText
+                                                                        StateMailbox.Post AddProgress
+                                                                        return res }) |> Async.Parallel
                     let text = response |> Array.map (function | Pass x -> Some (x |> HTMLToText |> format) | _ -> None)
 
                     return Array.zip urls text |> Array.map (fun (url, txt) -> {Url=url;UrlStr=EUrlStr url;Text=txt})
@@ -196,15 +223,15 @@ let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;Histo
 
 let Search data = async {
     let! res = SearchRes data |> Async.ofAsyncResult
-    res |> Finished |> SetState
+    res |> Finished |> SetState |> StateMailbox.Post
 }
 
 let HandleMessage x =
     match x with
         | StartSearch y ->
             y |> Search |> Async.StartAsPromise |> ignore
-        | GetState ->
-            SetState state
+        | Message.GetState ->
+            StateMailbox.Post SendState
         | _ -> ()
 
 let f = Func<obj,unit>(fun x -> HandleMessage (unbox<Message> x))
