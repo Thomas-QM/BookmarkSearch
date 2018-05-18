@@ -5,6 +5,12 @@
     "settings": {
         "message":"Параметры"
     },
+    "groupres": {
+        "message":"Группировать результаты"
+    },
+    "bookmark": {
+        "message":"закладка"
+    },
     "tosearch": {
         "message":"Текст для поиска"
     },
@@ -14,11 +20,8 @@
     "history": {
         "message":"История"
     },
-    "bookmark": {
-        "message":"Закладка"
-    },
-    "maxdays": {
-        "message":"Макс. дней:"
+    "mindays": {
+        "message":"Мин. дней:"
     },
     "maxres": {
         "message":"Макс. результатов:"

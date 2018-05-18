@@ -20,19 +20,23 @@ importAll "./App.scss"
 
 let getvalue (x:obj) =
     (x :?> HTMLInputElement).value
-
+let getchecked (x:obj) =
+    (x :?> HTMLInputElement).``checked``
 let getselectvalue (x:obj) =
     (x :?> HTMLSelectElement).value
 
 let InitSearch () =
     let tosearch = document.querySelector "#tosearch" |> getvalue
     let accuracy = document.querySelector "#accuracy" |> getvalue
+    let hdays = document.querySelector "#historydays" |> getvalue
     let hr = document.querySelector "#historyresults" |> getvalue
     let hb = document.querySelector "#historybookmarks" |> getselectvalue |> int
     let sm = document.querySelector "#searchmethod" |> getselectvalue |> int
 
-    let d = {ToSearch=tosearch;Accuracy=accuracy;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;}
+    let d = {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=hdays;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;}
     d |> StartSearch |> box |> browser.runtime.sendMessage |> Promise.start
+
+let rerender () = GetState |> box |> browser.runtime.sendMessage |> Promise.start
 
 window.onload <- (fun _ ->
     let locale:Element array = !![||]?slice?call(document.querySelectorAll ".locale")
@@ -45,16 +49,43 @@ window.onload <- (fun _ ->
     )
 
     window.onkeypress <- (fun x -> if x.keyCode = 13.0 then InitSearch())
+    (document.querySelector "#group" :?> HTMLInputElement).onchange <- (fun _ -> rerender ())
 
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
-
-    GetState |> box |> browser.runtime.sendMessage |> Promise.start
+    rerender()
 
     searchbutton.onclick <- (ignore >> InitSearch)
 )
 
 let SetStatus x =
     (document.querySelector "#status").innerHTML <- x
+
+let renderres group x =
+    let divcls = "uk-grid uk-width uk-margin-remove-top uk-margin-small-bottom"
+    let renderurltype =
+        sprintf "<span class=\"urltype uk-label uk-width-1-3 %s\" >%s</span>"
+    let bhtostr = function | Bookmark _ -> "bookmark" | History _ -> "history"
+    let html =
+        if not group then
+            x |> Array.mapi (fun i x ->
+                    let x2 = EUrlStr x |> function | x when x.Length > 65 -> sprintf "%s..." (x.Substring (0,62)) | x -> x
+                    sprintf "<div class=\"%s\" >%s<a class=\"link uk-width-2-3\" id='a%i' >%s</a></div>"
+                        divcls (renderurltype (x |> bhtostr) (x |> bhtostr |> browser.i18n.getMessage)) i x2) |> Array.reduce (+)
+        else
+            let rendersection offset name elems =
+                let elems = elems |> Array.mapi (fun i x -> sprintf "<a class=\"link uk-width\" id='a%i' >%s</a>" (i+offset) x) |> Array.reduce (+)
+                sprintf "<div class=\"%s\" >%s<div class=\"uk-width-2-3 uk-grid\" >%s</div></div>"
+                    divcls (renderurltype name (name |> browser.i18n.getMessage)) elems
+
+            let bookmarks = x |> Array.choose (function Bookmark x -> Some x | _ -> None)
+            let history = x |> Array.choose (function History x -> Some x | _ -> None)
+
+            rendersection 0 "bookmarks" bookmarks + rendersection (Array.length bookmarks) "history" history
+
+    SetStatus html
+    x |> Array.iteri (fun i x -> let a:HTMLLinkElement = (!!document.querySelector (sprintf "#a%i" i))
+                                 a.onclick <-
+                                    (fun _ -> browser.tabs.create (createObj ["url" ==> EUrlStr x])))
 
 let HandleState x =
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
@@ -80,13 +111,8 @@ let HandleState x =
                 | SearchStage.Searching -> "Searching... <div title=\"Searching...\" uk-spinner=\"ratio: 0.5\"></div>"
             |> SetStatus
         | Finished (Pass x) when Array.length x > 0 ->
-            SetStatus (x |> Array.mapi (fun i x ->
-                            let pre = match x with | Bookmark _ -> browser.i18n.getMessage "bookmark" | History _ -> browser.i18n.getMessage "history"
-                            let x2 = EUrlStr x |> function | x when x.Length > 65 -> sprintf "%s..." (x.Substring (0,62)) | x -> x
-                            sprintf "<div class=\"uk-grid uk-width uk-margin-remove-top uk-margin-small-bottom\" ><span class=\"urltype uk-label uk-width-1-3\" >%s</span><a class=\"link uk-width-2-3\" id='a%i' >%s</a></div>" pre i x2) |> Array.reduce (+))
-            x |> Array.iteri (fun i x -> let a:HTMLLinkElement = (!!document.querySelector (sprintf "#a%i" i))
-                                         a.onclick <-
-                                            (fun _ -> browser.tabs.create (createObj ["url" ==> EUrlStr x])))
+            let group = document.querySelector "#group" |> getchecked
+            renderres group x
         | Finished (Pass x) ->
             SetStatus "No results found!"
         | Finished (Fail (x::_)) ->
