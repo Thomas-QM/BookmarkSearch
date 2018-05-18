@@ -27,12 +27,11 @@ let getselectvalue (x:obj) =
 let InitSearch () =
     let tosearch = document.querySelector "#tosearch" |> getvalue
     let accuracy = document.querySelector "#accuracy" |> getvalue
-    let hd = document.querySelector "#historydays" |> getvalue
     let hr = document.querySelector "#historyresults" |> getvalue
     let hb = document.querySelector "#historybookmarks" |> getselectvalue |> int
     let sm = document.querySelector "#searchmethod" |> getselectvalue |> int
 
-    let d = {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=hd;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;}
+    let d = {ToSearch=tosearch;Accuracy=accuracy;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;}
     d |> StartSearch |> box |> browser.runtime.sendMessage
 
 window.onload <- (fun _ ->
@@ -84,7 +83,7 @@ let HandleState x =
             SetStatus (x |> Array.mapi (fun i x ->
                             let pre = match x with | Bookmark _ -> browser.i18n.getMessage "bookmark" | History _ -> browser.i18n.getMessage "history"
                             let x2 = EUrlStr x |> function | x when x.Length > 65 -> sprintf "%s..." (x.Substring (0,62)) | x -> x
-                            sprintf "<div class=\"uk-grid uk-margin-small\" ><span class=\"urltype uk-label uk-width-small\" >%s</span><a class=\"link uk-width-medium\" id='a%i' >%s</a></p>" pre i x2) |> Array.reduce (+))
+                            sprintf "<div class=\"uk-grid uk-width uk-margin-remove-top uk-margin-small-bottom\" ><span class=\"urltype uk-label uk-width-1-3\" >%s</span><a class=\"link uk-width-2-3\" id='a%i' >%s</a></div>" pre i x2) |> Array.reduce (+))
             x |> Array.iteri (fun i x -> let a:HTMLLinkElement = (!!document.querySelector (sprintf "#a%i" i))
                                          a.onclick <-
                                             (fun _ -> browser.tabs.create (createObj ["url" ==> EUrlStr x])))

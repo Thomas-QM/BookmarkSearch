@@ -33,7 +33,7 @@ type State =
     | Searching of SearchStage
     | Finished of Result<ElemUrl array,string>
 
-type HTMLDataElements = {ToSearch:string; Accuracy:string; HistoryDays:string; HistoryResults:string; HistoryBookmarks:int; SearchMethod:int;}
+type HTMLDataElements = {ToSearch:string; Accuracy:string; HistoryResults:string; HistoryBookmarks:int; SearchMethod:int;}
 
 type [<Pojo>] BookmarkTree = {url:string option;children:BookmarkTree array option;}
 type [<Pojo>] HistoryItem = {id:string; url:string option}
