@@ -46,7 +46,7 @@ let SetInputs inputs =
             match etype, newval with
                 | ValueType, Value x -> elem?value <- x
                 | CheckboxType, Checkbox x -> elem?``checked`` <- x
-                | SelectIntType, SelectInt x -> elem?value <- x
+                | SelectIntType, SelectInt x -> elem?value <- (string x)
                 | _ -> () )
     |> ignore
 
