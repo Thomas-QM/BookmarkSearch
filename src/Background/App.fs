@@ -166,8 +166,10 @@ let GetHistory hdays maxres = async {
 
 let Equals x y = x=y
 
-let SearchRes {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;HistoryResults=historyresults;HistoryBookmarks=historybookmarks;SearchMethod=searchmethod} = asyncTrial {
+let SearchRes inputs = asyncTrial {
     Searching RetrievingUrls |> SetState |> StateMailbox.Post
+
+    let! {ToSearch=tosearch;Accuracy=accuracy;HistoryDays=historydays;HistoryResults=historyresults;HistoryBookmarks=historybookmarks;SearchMethod=searchmethod} = intorec inputs
 
     let! tosearch = tosearch |> ValidateSearch
     let accuracy = accuracy |> float
@@ -234,6 +236,10 @@ let HandleMessage x =
             y |> Search |> Async.StartAsPromise |> ignore
         | Message.GetState ->
             StateMailbox.Post SendState
+        | UpdateStorage (Some x) ->
+            BrowserLocalStorage.save "tomeStorage" x
+        | GetStorage ->
+            BrowserLocalStorage.load "tomeStorage" |> UpdateStorage |> box |> browser.runtime.sendMessage
         | _ -> ()
 
 let f = Func<obj,unit>(fun x -> HandleMessage (unbox<Message> x))

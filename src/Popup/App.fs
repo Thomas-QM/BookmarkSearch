@@ -1,13 +1,14 @@
 module Popup
 
-open Fable.Core
+
 open Fable.Core.JsInterop
 open Fable.Import.Browser
-open Fable.Import
 
+open Fable.Core
 open Fable.PowerPack
 open Fable.PowerPack.Fetch
 open Fable.PowerPack.Date
+
 
 open System
 open System.Text.RegularExpressions
@@ -15,6 +16,7 @@ open System.Text.RegularExpressions
 open Shared
 
 open Chessie.ErrorHandling
+open FSharp.Core
 
 importAll "./App.scss"
 
@@ -25,17 +27,35 @@ let getchecked (x:obj) =
 let getselectvalue (x:obj) =
     (x :?> HTMLSelectElement).value
 
-let InitSearch () =
-    let tosearch = document.querySelector "#tosearch" |> getvalue
-    let accuracy = document.querySelector "#accuracy" |> getvalue
-    let hdays = document.querySelector "#historydays" |> getvalue
-    let group = document.querySelector "#group" |> getchecked
-    let hr = document.querySelector "#historyresults" |> getvalue
-    let hb = document.querySelector "#historybookmarks" |> getselectvalue |> int
-    let sm = document.querySelector "#searchmethod" |> getselectvalue |> int
+let ignorefirst x _ y = x y
 
-    let d = {ToSearch=tosearch;Group=group;Accuracy=accuracy;HistoryDays=hdays;HistoryResults=hr;HistoryBookmarks=hb;SearchMethod=sm;}
-    d |> StartSearch |> box |> browser.runtime.sendMessage
+let InputList =
+    [|ValueType, "tosearch"; CheckboxType, "group"; ValueType, "accuracy"; ValueType, "historydays"; ValueType, "historyresults"; SelectIntType, "historybookmarks"; SelectIntType, "searchmethod"|]
+let GetInputs () =
+    InputList |> Array.map (fun (etype, x) ->
+                                let elem = document.querySelector ("#"+x)
+                                match etype with
+                                    | ValueType -> Value !!elem?value
+                                    | CheckboxType -> Checkbox !!elem?``checked``
+                                    | SelectIntType -> SelectInt (!!elem?value |> int) )
+let SetInputs inputs =
+    InputList |> Array.mapi
+        (fun i (etype, x) ->
+            let newval = Array.item i inputs
+            let elem = document.querySelector ("#"+x)
+            match etype, newval with
+                | ValueType, Value x -> elem?value <- x
+                | CheckboxType, Checkbox x -> elem?``checked`` <- x
+                | SelectIntType, SelectInt x -> elem?value <- x
+                | _ -> () )
+    |> ignore
+
+let SaveInputs () =
+    let storage = {Inputs=GetInputs ()}
+    Some storage |> UpdateStorage |> box |> browser.runtime.sendMessage
+
+let InitSearch () =
+    GetInputs () |> StartSearch |> box |> browser.runtime.sendMessage
 
 let rerender () = GetState |> box |> browser.runtime.sendMessage
 
@@ -47,12 +67,16 @@ window.onload <- (fun _ ->
         match classes |> Array.exists (fun x -> x="lcplaceholder") with
             | true -> x.setAttribute ("placeholder",msg)
             | false -> x?innerText <- msg
+
+        let elems = InputList |> Array.map (fun (_,x) -> document.querySelector ("#"+x))
+        elems |> Array.iter (fun x -> x?onchange <- (fun _ -> SaveInputs()))
     )
 
     window.onkeypress <- (fun x -> if x.keyCode = 13.0 then InitSearch())
-    (document.querySelector "#group" :?> HTMLInputElement).onchange <- (fun _ -> rerender ())
+    (document.querySelector "#group" :?> HTMLInputElement).onchange <- (fun _ -> SaveInputs(); rerender ())
 
     let searchbutton = (document.querySelector "#search") :?> HTMLButtonElement
+    GetStorage |> box |> browser.runtime.sendMessage
     rerender()
 
     searchbutton.onclick <- (ignore >> InitSearch)
@@ -125,6 +149,11 @@ let HandleState x =
 
 let HandleMessage = function
     | StateUpdate x -> HandleState x
+    | UpdateStorage x ->
+        match x with
+            | Some ({Inputs=x}) ->
+                x |> SetInputs
+            | _ -> ()
     | _ -> ()
 
 let f = Func<obj,unit>(fun x -> HandleMessage (unbox<Message> x))
