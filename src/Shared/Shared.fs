@@ -27,13 +27,28 @@ type SearchStage =
     | Indexing of Progress
     | Searching
 
-
 type State =
     | Idle
     | Searching of SearchStage
     | Finished of Result<ElemUrl array,string>
 
-type HTMLDataElements = {ToSearch:string; Accuracy:string; HistoryDays:string; HistoryResults:string; HistoryBookmarks:int; SearchMethod:int;}
+type HTMLDataElements = {ToSearch:string; Group:bool; Accuracy:string; HistoryDays:string; HistoryResults:string; HistoryBookmarks:int; SearchMethod:int;}
+
+type InputType =
+    | CheckboxType
+    | ValueType
+    | SelectIntType
+
+type Input =
+    | Checkbox of bool
+    | Value of string
+    | SelectInt of int
+
+let intorec = function
+    | [|Value a; Checkbox b; Value c; Value d; Value e; SelectInt f; SelectInt g|] -> ok {ToSearch=a;Group=b;Accuracy=c;HistoryDays=d;HistoryResults=e;HistoryBookmarks=f;SearchMethod=g}
+    | _ -> fail "Inputs not provided."
+
+type StorageState = {Inputs:Input array;}
 
 type [<Pojo>] BookmarkTree = {url:string option;children:BookmarkTree array option;}
 type [<Pojo>] HistoryItem = {id:string; url:string option}
@@ -48,7 +63,9 @@ type WebExtBrowser = {bookmarks:WebExtBookmarks; tabs:WebExtTabs; runtime:WebExt
 type Message =
     | StateUpdate of State
     | GetState
-    | StartSearch of HTMLDataElements
+    | StartSearch of Input array
+    | GetStorage
+    | UpdateStorage of StorageState option
 
 [<Emit("browser")>]
 let browser:WebExtBrowser = jsNative

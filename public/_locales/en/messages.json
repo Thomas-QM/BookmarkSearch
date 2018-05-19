@@ -32,6 +32,9 @@
     "bookmarks": {
         "message":"Bookmarks"
     },
+    "bookmarksgroup": {
+        "message":"Bookmarks"
+    },
     "text": {
         "message":"Text"
     },

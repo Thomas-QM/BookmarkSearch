@@ -1,8 +1,8 @@
 {
 
     "manifest_version": 2,
-    "name": "BookmarkSearch",
-    "version": "0.3",
+    "name": "Tome",
+    "version": "0.3.7",
 
     "default_locale": "en",
 
