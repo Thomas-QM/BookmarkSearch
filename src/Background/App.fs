@@ -61,12 +61,16 @@ type [<Pojo>] SearchElem = {Url:ElemUrl; UrlStr:string; Text:string option;}
 
 let GetText url = async {
         try
-            let! res = fetch url [Mode RequestMode.Cors] |> Async.AwaitPromise
-            let! restxt = res.text () |> Async.AwaitPromise
-            return ok restxt
+            let! headers = fetch url [Method HttpMethod.HEAD] |> Async.AwaitPromise
+            match headers.Headers.ContentType with
+                | Some x when x.StartsWith "text" ->
+                    let! res = fetch url [Mode RequestMode.Cors] |> Async.AwaitPromise
+                    let! restxt = res.text () |> Async.AwaitPromise
+                    return ok restxt
+                | _ -> return fail "Url was not a text page."
         with
             | error ->
-                return fail error
+                return fail error.Message
 }
 
 let HTMLToText x =
@@ -214,6 +218,7 @@ let SearchRes inputs = asyncTrial {
                     GettingText {Done=0;Total=len} |> Searching |> SetState |> StateMailbox.Post
                     let! response = urls |> Array.map (fun x -> async { let! res = EUrlStr x |> GetText
                                                                         StateMailbox.Post AddProgress
+                                                                        printfn "finished getting %s" (EUrlStr x)
                                                                         return res }) |> Async.Parallel
                     let text = response |> Array.map (function | Pass x -> Some (x |> HTMLToText |> format) | _ -> None)
 
