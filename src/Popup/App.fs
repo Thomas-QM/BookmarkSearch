@@ -79,7 +79,7 @@ window.onload <- (fun _ ->
     GetStorage |> box |> browser.runtime.sendMessage
     rerender()
 
-    (document.querySelector "gitlink" :?> HTMLLinkElement).onclick <- (fun _ -> browser.tabs.create (createObj ["url" ==> "https://github.com/Thomas-QM/Tome"]))
+    (document.querySelector "#gitlink" :?> HTMLLinkElement).onclick <- (fun _ -> browser.tabs.create (createObj ["url" ==> "https://github.com/Thomas-QM/Tome"]))
     searchbutton.onclick <- (ignore >> InitSearch)
 )
 
